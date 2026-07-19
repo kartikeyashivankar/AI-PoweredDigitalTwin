@@ -4,6 +4,14 @@ This repository implements a Proof of Concept (PoC) **AI-Powered Digital Twin of
 
 ---
 
+## 🌐 Live Demo
+
+You can explore the live deployments of this digital twin system at the following addresses:
+- **Frontend Dashboard**: [https://ai-powered-digital-twin.vercel.app](https://ai-powered-digital-twin.vercel.app)
+- **Backend API & Swagger Docs**: [https://ai-powereddigitaltwin.onrender.com/docs](https://ai-powereddigitaltwin.onrender.com/docs) (or health endpoint at [https://ai-powereddigitaltwin.onrender.com/health](https://ai-powereddigitaltwin.onrender.com/health))
+
+---
+
 ## 📌 Problem Statement
 
 Predicting weather patterns and simulating future climate impacts on a regional scale is highly challenging. India’s diverse climate zones are highly vulnerable to extreme events such as heatwaves, heavy rainfall, and droughts, which pose severe risks to agriculture, water reserves, and grid infrastructure. Traditional numerical weather models are computationally intensive and slow to respond to real-time queries. 
