@@ -4,7 +4,6 @@ import { Sliders, AlertOctagon, RefreshCw, CheckCircle2, TrendingDown, Thermomet
 export default function WhatIfSimulator() {
   const [rainfallChange, setRainfallChange] = useState(0); // -50% to +50%
   const [tempChange, setTempChange] = useState(0.0); // -2.0°C to +5.0°C
-  const [simulationResult, setSimulationResult] = useState({});
 
   // Presets mapping
   const presets = {
@@ -26,63 +25,62 @@ export default function WhatIfSimulator() {
     setTempChange(0.0);
   };
 
-  // Run impact calculation logic based on slider coefficients
-  useEffect(() => {
-    let alertLevel = 'Nominal';
-    let alertColor = 'border-blue-500/30 bg-blue-500/5 text-blue-400';
-    let icon = CheckCircle2;
-    let description = '';
+  const [simulationResult, setSimulationResult] = useState({
+    alertLevel: 'Nominal Climate Grid',
+    alertColor: 'border-slate-800 bg-slate-900/30 text-slate-300',
+    description: 'No significant anomalies detected.',
+    agriculturalYield: 0,
+    waterAvailability: 0,
+    gridResilience: 0
+  });
+  const [simulating, setSimulating] = useState(false);
 
-    const tempCoeff = tempChange;
-    const rainCoeff = rainfallChange;
+  const runSimulationApi = async (rainVal, tempVal) => {
+    setSimulating(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/whatif/?rainfall_change=${rainVal}&temp_change=${tempVal}`);
+      if (!res.ok) {
+        throw new Error('Failed to run simulation');
+      }
+      const data = await res.json();
+      
+      // Determine the correct Lucide icon component based on alert level
+      let icon = CheckCircle2;
+      const alertLevel = data.alertLevel || '';
+      if (alertLevel.includes('Desertification') || alertLevel.includes('Drought')) {
+        icon = AlertOctagon;
+      } else if (alertLevel.includes('Flash Floods')) {
+        icon = CloudRain;
+      } else if (alertLevel.includes('Heat Stress')) {
+        icon = Thermometer;
+      }
 
-    // Logic trees
-    if (tempCoeff >= 3.5 && rainCoeff <= -20) {
-      alertLevel = 'Extreme Risk: Severe Desertification';
-      alertColor = 'border-orange-600/30 bg-orange-600/5 text-orange-400';
-      icon = AlertOctagon;
-      description = 'CRITICAL: High threat of agricultural collapse, extreme soil moisture loss, and widespread urban water rationing. Immediate action required in Western and Central zones.';
-    } else if (tempCoeff >= 2.0 && rainCoeff <= -25) {
-      alertLevel = 'High Risk: Regional Drought Alert';
-      alertColor = 'border-orange-500/30 bg-orange-500/5 text-orange-400';
-      icon = AlertOctagon;
-      description = 'WARNING: Mild-to-moderate drought markers active. Water reservoirs projected to deplete by 25% over the simulation quarter. Dryland crops like millets and pulses are highly vulnerable.';
-    } else if (rainCoeff >= 35) {
-      alertLevel = 'High Risk: Fluvial Flash Floods';
-      alertColor = 'border-blue-500/30 bg-blue-500/5 text-blue-400';
-      icon = CloudRain;
-      description = 'WARNING: Flash flood hazards identified in Ganges-Brahmaputra delta and coastal cities. Urban sewer drainage capacities exceeded. Landslide warnings issued for northern hill states.';
-    } else if (tempCoeff >= 3.0) {
-      alertLevel = 'Moderate Risk: Heat Stress & Energy Load';
-      alertColor = 'border-orange-400/30 bg-orange-400/5 text-orange-300';
-      icon = Thermometer;
-      description = 'CAUTION: Urban heat islands under severe load. Peak power grid consumption expected to rise by 18% to sustain cooling systems. Wet-bulb temperatures exceed safety safety limits in eastern plains.';
-    } else if (rainCoeff >= 15 && tempCoeff < 1.0) {
-      alertLevel = 'Optimal Monsoon Flow';
-      alertColor = 'border-blue-500/30 bg-blue-500/5 text-blue-400';
-      icon = CheckCircle2;
-      description = 'INFO: Simulated conditions project optimal groundwater replenishment and record-high yields for kharif crops (rice, sugarcane). Low soil erosion risk.';
-    } else {
-      alertLevel = 'Nominal Climate Grid';
-      alertColor = 'border-slate-800 bg-slate-900/30 text-slate-300';
-      icon = CheckCircle2;
-      description = 'No significant anomalies detected. Regional temperature gradients, surface albedo ratios, and precipitation volumes align with baseline historical climate indexes.';
+      setSimulationResult({
+        alertLevel: data.alertLevel,
+        alertColor: data.alertColor,
+        description: data.description,
+        agriculturalYield: data.agriculturalYield,
+        waterAvailability: data.waterAvailability,
+        gridResilience: data.gridResilience,
+        icon
+      });
+    } catch (err) {
+      console.error(err);
+      setSimulationResult(prev => ({
+        ...prev,
+        description: `Error: Unable to connect to simulation solvers. Details: ${err.message}`
+      }));
+    } finally {
+      setSimulating(false);
     }
+  };
 
-    // Calculated indicators
-    const agriculturalYield = Math.max(-50, Math.min(25, Math.round(rainCoeff * 0.4 - tempCoeff * 6.5)));
-    const waterAvailability = Math.max(-60, Math.min(40, Math.round(rainCoeff * 1.2 - tempCoeff * 8.0)));
-    const gridResilience = Math.max(-45, Math.min(10, Math.round(-tempCoeff * 9.5)));
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      runSimulationApi(rainfallChange, tempChange);
+    }, 150);
 
-    setSimulationResult({
-      alertLevel,
-      alertColor,
-      icon,
-      description,
-      agriculturalYield,
-      waterAvailability,
-      gridResilience
-    });
+    return () => clearTimeout(delayDebounceFn);
   }, [rainfallChange, tempChange]);
 
   const ResultIcon = simulationResult.icon || CheckCircle2;
@@ -209,7 +207,14 @@ export default function WhatIfSimulator() {
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold">Simulator Output</h2>
-                  <span className="text-[10px] text-slate-400 font-mono">Real-time Solvers</span>
+                  {simulating ? (
+                    <span className="text-[10px] text-blue-400 font-mono flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                      Solving...
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-mono">Real-time Solvers</span>
+                  )}
                 </div>
 
                 {/* Risk Level Badge */}

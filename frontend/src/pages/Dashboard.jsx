@@ -1,59 +1,187 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { CloudRain, Sun, Thermometer, Droplet, AlertTriangle, Info } from 'lucide-react';
+import { CloudRain, Sun, Thermometer, Droplet, AlertTriangle, Info, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   const [activeMetric, setActiveMetric] = useState('Rainfall'); // 'Rainfall', 'Temperature', 'Drought'
   const [hoveredRegion, setHoveredRegion] = useState(null);
+  const [regionalData, setRegionalData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Region climate data for the Digital Twin
-  const regionalData = {
-    Rainfall: [
-      { name: 'Mumbai (West)', lat: 19.0760, lng: 72.8777, value: 340, unit: 'mm', status: 'Excessive', color: '#38bdf8' },
-      { name: 'Delhi (North)', lat: 28.6139, lng: 77.2090, value: 95, unit: 'mm', status: 'Deficit', color: '#fb923c' },
-      { name: 'Chennai (South)', lat: 13.0827, lng: 80.2707, value: 140, unit: 'mm', status: 'Normal', color: '#34d399' },
-      { name: 'Kolkata (East)', lat: 22.5726, lng: 88.3639, value: 210, unit: 'mm', status: 'Normal', color: '#34d399' },
-      { name: 'Guwahati (North-East)', lat: 26.1445, lng: 91.7362, value: 410, unit: 'mm', status: 'Excessive', color: '#38bdf8' },
-      { name: 'Bengaluru (South-Central)', lat: 12.9716, lng: 77.5946, value: 115, unit: 'mm', status: 'Normal', color: '#34d399' },
-    ],
-    Temperature: [
-      { name: 'Mumbai (West)', lat: 19.0760, lng: 72.8777, value: 29.8, unit: '°C', status: 'Nominal', color: '#34d399' },
-      { name: 'Delhi (North)', lat: 28.6139, lng: 77.2090, value: 41.2, unit: '°C', status: 'Heatwave Warning', color: '#ef4444' },
-      { name: 'Chennai (South)', lat: 13.0827, lng: 80.2707, value: 34.5, unit: '°C', status: 'High', color: '#f97316' },
-      { name: 'Kolkata (East)', lat: 22.5726, lng: 88.3639, value: 33.1, unit: '°C', status: 'High', color: '#f97316' },
-      { name: 'Guwahati (North-East)', lat: 26.1445, lng: 91.7362, value: 28.4, unit: '°C', status: 'Nominal', color: '#34d399' },
-      { name: 'Bengaluru (South-Central)', lat: 12.9716, lng: 77.5946, value: 27.5, unit: '°C', status: 'Nominal', color: '#34d399' },
-    ],
-    Drought: [
-      { name: 'Mumbai (West)', lat: 19.0760, lng: 72.8777, value: 0.12, unit: 'D-Index', status: 'No Drought', color: '#34d399' },
-      { name: 'Delhi (North)', lat: 28.6139, lng: 77.2090, value: 0.68, unit: 'D-Index', status: 'Moderate', color: '#fb923c' },
-      { name: 'Chennai (South)', lat: 13.0827, lng: 80.2707, value: 0.45, unit: 'D-Index', status: 'Mild', color: '#facc15' },
-      { name: 'Kolkata (East)', lat: 22.5726, lng: 88.3639, value: 0.22, unit: 'D-Index', status: 'No Drought', color: '#34d399' },
-      { name: 'Guwahati (North-East)', lat: 26.1445, lng: 91.7362, value: 0.05, unit: 'D-Index', status: 'No Drought', color: '#34d399' },
-      { name: 'Bengaluru (South-Central)', lat: 12.9716, lng: 77.5946, value: 0.52, unit: 'D-Index', status: 'Mild', color: '#facc15' },
-    ],
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const regions = ['mumbai', 'delhi', 'chennai', 'kolkata', 'guwahati', 'bengaluru'];
+      const responses = await Promise.all(
+        regions.map(r =>
+          fetch(`http://localhost:8000/api/dashboard/?region=${r}`).then(res => {
+            if (!res.ok) {
+              throw new Error(`Failed to fetch region: ${r}`);
+            }
+            return res.json();
+          })
+        )
+      );
+
+      const parsedRainfall = responses.map(r => ({
+        name: r.region,
+        lat: r.lat,
+        lng: r.lng,
+        value: r.rainfall.value,
+        unit: r.rainfall.unit,
+        status: r.rainfall.status,
+        color: r.rainfall.color
+      }));
+
+      const parsedTemperature = responses.map(r => ({
+        name: r.region,
+        lat: r.lat,
+        lng: r.lng,
+        value: r.temperature.value,
+        unit: r.temperature.unit,
+        status: r.temperature.status,
+        color: r.temperature.color
+      }));
+
+      const parsedDrought = responses.map(r => ({
+        name: r.region,
+        lat: r.lat,
+        lng: r.lng,
+        value: r.drought.value,
+        unit: r.drought.unit,
+        status: r.drought.status,
+        color: r.drought.color
+      }));
+
+      setRegionalData({
+        Rainfall: parsedRainfall,
+        Temperature: parsedTemperature,
+        Drought: parsedDrought
+      });
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to connect to the digital twin database.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-[calc(100vh-73px)] bg-slate-950 text-slate-100 p-6 md:p-8 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md bg-slate-900/50 border border-slate-800 p-8 rounded-2xl backdrop-blur-md">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 animate-spin">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="w-8 h-8">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-200">Syncing Climate Twin...</h2>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            Establishing secure handshake protocols and downloading live telemetry matrices from the weather simulation nodes.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-[calc(100vh-73px)] bg-slate-950 text-slate-100 p-6 md:p-8 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md bg-slate-900/50 border border-red-500/30 p-8 rounded-2xl backdrop-blur-md shadow-lg shadow-red-950/10">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-400">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-200">Twin Synchronization Failed</h2>
+          <p className="text-red-400 text-xs leading-relaxed font-mono">
+            {error}
+          </p>
+          <p className="text-slate-400 text-xs">
+            Verify that your backend Python server is running locally at <code className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">http://localhost:8000</code>.
+          </p>
+          <button
+            onClick={fetchDashboardData}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-855 text-sm font-semibold rounded-lg border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white transition-all shadow-md active:scale-[0.98]"
+          >
+            <RefreshCw className="w-4 h-4 text-slate-300" />
+            <span>Retry Connection</span>
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   const getMetricSummary = () => {
+    if (!regionalData) return {};
+    const data = regionalData[activeMetric] || [];
+    const sum = data.reduce((acc, curr) => acc + curr.value, 0);
+    const avg = data.length > 0 ? (sum / data.length) : 0;
+
     switch (activeMetric) {
       case 'Rainfall':
-        return { avg: '218 mm', label: 'National Average', status: 'Active Monsoon Flow', icon: CloudRain, colorClass: 'text-blue-400' };
+        return { avg: `${Math.round(avg)} mm`, label: 'National Average', status: 'Active Monsoon Flow', icon: CloudRain, colorClass: 'text-blue-400' };
       case 'Temperature':
-        return { avg: '32.4 °C', label: 'National Average', status: 'Localized Heatwaves', icon: Thermometer, colorClass: 'text-orange-400' };
+        return { avg: `${avg.toFixed(1)} °C`, label: 'National Average', status: 'Localized Heatwaves', icon: Thermometer, colorClass: 'text-orange-400' };
       case 'Drought':
-        return { avg: '0.34 Index', label: 'Average Risk Factor', status: 'Water Deficits in NW', icon: AlertTriangle, colorClass: 'text-amber-400' };
+        return { avg: `${avg.toFixed(2)} Index`, label: 'Average Risk Factor', status: 'Water Deficits in NW', icon: AlertTriangle, colorClass: 'text-amber-400' };
       default:
         return {};
     }
   };
 
   const currentSummary = getMetricSummary();
-  const activeData = regionalData[activeMetric];
+  const activeData = regionalData ? regionalData[activeMetric] : [];
 
-  // Specific current values for quick-view right cards
-  const summaryRainfall = '218 mm (Avg)';
-  const summaryTemperature = '32.4 °C (Avg)';
+  const getSummaryRainfall = () => {
+    if (!regionalData) return '0 mm (Avg)';
+    const data = regionalData.Rainfall || [];
+    const sum = data.reduce((acc, curr) => acc + curr.value, 0);
+    const avg = data.length > 0 ? (sum / data.length) : 0;
+    return `${Math.round(avg)} mm (Avg)`;
+  };
+
+  const getSummaryTemperature = () => {
+    if (!regionalData) return '0 °C (Avg)';
+    const data = regionalData.Temperature || [];
+    const sum = data.reduce((acc, curr) => acc + curr.value, 0);
+    const avg = data.length > 0 ? (sum / data.length) : 0;
+    return `${avg.toFixed(1)} °C (Avg)`;
+  };
+
+  const summaryRainfall = getSummaryRainfall();
+  const summaryTemperature = getSummaryTemperature();
+
+  const getRegionValue = (metric, nameFragment) => {
+    if (!regionalData) return { value: 0, status: '', percent: 0 };
+    const item = regionalData[metric]?.find(r => r.name.toLowerCase().includes(nameFragment.toLowerCase()));
+    if (!item) return { value: 0, status: '', percent: 0 };
+    
+    let percent = 0;
+    if (metric === 'Rainfall') {
+      percent = Math.min(100, Math.round((item.value / 450) * 100));
+    } else if (metric === 'Temperature') {
+      percent = Math.min(100, Math.round((item.value / 45) * 100));
+    } else if (metric === 'Drought') {
+      percent = Math.min(100, Math.round(item.value * 100));
+    }
+
+    return {
+      value: item.value,
+      status: item.status,
+      percent
+    };
+  };
+
+  const guwahatiRain = getRegionValue('Rainfall', 'Guwahati');
+  const delhiRain = getRegionValue('Rainfall', 'Delhi');
+  const delhiTemp = getRegionValue('Temperature', 'Delhi');
+  const bengaluruTemp = getRegionValue('Temperature', 'Bengaluru');
 
   return (
     <main className="min-h-[calc(100vh-73px)] bg-slate-950 text-slate-100 p-6 md:p-8">
@@ -207,17 +335,17 @@ export default function Dashboard() {
               <div className="mt-6 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">West Coast Core (Guwahati/Guang)</span>
-                  <span className="font-bold text-blue-400">410 mm</span>
+                  <span className="font-bold text-blue-400">{guwahatiRain.value} mm</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1 rounded-full overflow-hidden">
-                  <div className="bg-blue-500 h-full rounded-full w-[90%]"></div>
+                  <div className="bg-blue-500 h-full rounded-full" style={{ width: `${guwahatiRain.percent}%` }}></div>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Indo-Gangetic Basin (Delhi)</span>
-                  <span className="font-bold text-amber-500">95 mm (Deficit)</span>
+                  <span className="font-bold text-amber-500">{delhiRain.value} mm ({delhiRain.status})</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1 rounded-full overflow-hidden">
-                  <div className="bg-amber-500 h-full rounded-full w-[23%]"></div>
+                  <div className="bg-amber-500 h-full rounded-full" style={{ width: `${delhiRain.percent}%` }}></div>
                 </div>
               </div>
             </div>
@@ -246,17 +374,17 @@ export default function Dashboard() {
               <div className="mt-6 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">North Region (Delhi Heatwave)</span>
-                  <span className="font-bold text-orange-500">41.2 °C</span>
+                  <span className="font-bold text-orange-500">{delhiTemp.value} °C</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1 rounded-full overflow-hidden">
-                  <div className="bg-orange-500 h-full rounded-full w-[95%]"></div>
+                  <div className="bg-orange-500 h-full rounded-full" style={{ width: `${delhiTemp.percent}%` }}></div>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">South-Central Plateau (Bengaluru)</span>
-                  <span className="font-bold text-emerald-400">27.5 °C (Nominal)</span>
+                  <span className="font-bold text-emerald-400">{bengaluruTemp.value} °C ({bengaluruTemp.status})</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1 rounded-full overflow-hidden">
-                  <div className="bg-emerald-400 h-full rounded-full w-[55%]"></div>
+                  <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${bengaluruTemp.percent}%` }}></div>
                 </div>
               </div>
             </div>

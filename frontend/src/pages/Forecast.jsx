@@ -1,18 +1,86 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { CloudRain, CloudSun, CloudDrizzle, CloudLightning, Sun, Navigation, Droplets } from 'lucide-react';
+import { CloudRain, CloudSun, CloudDrizzle, CloudLightning, Sun, Navigation, Droplets, AlertTriangle, RefreshCw } from 'lucide-react';
+
+const iconMap = {
+  CloudRain: CloudRain,
+  CloudDrizzle: CloudDrizzle,
+  CloudLightning: CloudLightning,
+  CloudSun: CloudSun,
+  Sun: Sun
+};
 
 export default function Forecast() {
-  // Mock 7-day forecast datasets
-  const forecastData = [
-    { day: 'Wed', date: 'Jul 15', tempMax: 33, tempMin: 27, rainfall: 45, prob: '90%', icon: CloudRain, condition: 'Heavy Showers' },
-    { day: 'Thu', date: 'Jul 16', tempMax: 34, tempMin: 28, rainfall: 32, prob: '75%', icon: CloudDrizzle, condition: 'Light Rain' },
-    { day: 'Fri', date: 'Jul 17', tempMax: 31, tempMin: 26, rainfall: 65, prob: '95%', icon: CloudLightning, condition: 'Thunderstorm' },
-    { day: 'Sat', date: 'Jul 18', tempMax: 32, tempMin: 27, rainfall: 15, prob: '40%', icon: CloudSun, condition: 'Scattered Clouds' },
-    { day: 'Sun', date: 'Jul 19', tempMax: 35, tempMin: 29, rainfall: 5, prob: '10%', icon: Sun, condition: 'Clear Sky' },
-    { day: 'Mon', date: 'Jul 20', tempMax: 34, tempMin: 28, rainfall: 22, prob: '60%', icon: CloudDrizzle, condition: 'Showers' },
-    { day: 'Tue', date: 'Jul 21', tempMax: 33, tempMin: 27, rainfall: 55, prob: '85%', icon: CloudRain, condition: 'Moderate Rain' },
-  ];
+  const [forecastData, setForecastData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchForecastData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('http://localhost:8000/api/forecast/');
+      if (!res.ok) {
+        throw new Error('Failed to fetch forecast data');
+      }
+      const data = await res.json();
+      setForecastData(data);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to connect to the forecast engine.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchForecastData();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-[calc(100vh-73px)] bg-slate-950 text-slate-100 p-6 md:p-8 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md bg-slate-900/50 border border-slate-800 p-8 rounded-2xl backdrop-blur-md">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 animate-spin">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="w-8 h-8">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-200">Initializing Forecast Models...</h2>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            Running high-dimensional regional projections and downloading atmospheric boundary layers from the neural network solver.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-[calc(100vh-73px)] bg-slate-950 text-slate-100 p-6 md:p-8 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md bg-slate-900/50 border border-red-500/30 p-8 rounded-2xl backdrop-blur-md shadow-lg shadow-red-950/10">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-400">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-200">Forecast Initialization Failed</h2>
+          <p className="text-red-400 text-xs leading-relaxed font-mono">
+            {error}
+          </p>
+          <p className="text-slate-400 text-xs">
+            Verify that your backend Python server is running locally at <code className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">http://localhost:8000</code>.
+          </p>
+          <button
+            onClick={fetchForecastData}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-850 text-sm font-semibold rounded-lg border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white transition-all shadow-md active:scale-[0.98]"
+          >
+            <RefreshCw className="w-4 h-4 text-slate-300" />
+            <span>Retry Connection</span>
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   // Chart data matching the forecast
   const chartData = forecastData.map(item => ({
@@ -46,7 +114,7 @@ export default function Forecast() {
           <h2 className="text-xl font-bold tracking-tight text-slate-200">7-Day Atmospheric Outlook</h2>
           <div className="space-y-3">
             {forecastData.map((item, idx) => {
-              const IconComponent = item.icon;
+              const IconComponent = iconMap[item.icon] || Sun;
               return (
                 <div
                   key={idx}
