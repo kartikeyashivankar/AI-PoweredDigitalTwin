@@ -14,9 +14,10 @@ export default function Dashboard() {
     setError(null);
     try {
       const regions = ['mumbai', 'delhi', 'chennai', 'kolkata', 'guwahati', 'bengaluru'];
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://ai-powereddigitaltwin.onrender.com';
       const responses = await Promise.all(
         regions.map(r =>
-          fetch(`http://localhost:8000/api/dashboard/?region=${r}`).then(res => {
+          fetch(`${apiUrl}/api/dashboard/?region=${r}`).then(res => {
             if (!res.ok) {
               throw new Error(`Failed to fetch region: ${r}`);
             }
@@ -103,7 +104,7 @@ export default function Dashboard() {
             {error}
           </p>
           <p className="text-slate-400 text-xs">
-            Verify that your backend Python server is running locally at <code className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">http://localhost:8000</code>.
+            Verify that your backend Python server is running at <code className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">{import.meta.env.VITE_API_URL || 'https://ai-powereddigitaltwin.onrender.com'}</code>.
           </p>
           <button
             onClick={fetchDashboardData}

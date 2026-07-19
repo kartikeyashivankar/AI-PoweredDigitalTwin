@@ -38,7 +38,8 @@ export default function WhatIfSimulator() {
   const runSimulationApi = async (rainVal, tempVal) => {
     setSimulating(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/whatif/?rainfall_change=${rainVal}&temp_change=${tempVal}`);
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://ai-powereddigitaltwin.onrender.com';
+      const res = await fetch(`${apiUrl}/api/whatif/?rainfall_change=${rainVal}&temp_change=${tempVal}`);
       if (!res.ok) {
         throw new Error('Failed to run simulation');
       }

@@ -19,7 +19,8 @@ export default function Forecast() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:8000/api/forecast/');
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://ai-powereddigitaltwin.onrender.com';
+      const res = await fetch(`${apiUrl}/api/forecast/`);
       if (!res.ok) {
         throw new Error('Failed to fetch forecast data');
       }
@@ -68,7 +69,7 @@ export default function Forecast() {
             {error}
           </p>
           <p className="text-slate-400 text-xs">
-            Verify that your backend Python server is running locally at <code className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">http://localhost:8000</code>.
+            Verify that your backend Python server is running at <code className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">{import.meta.env.VITE_API_URL || 'https://ai-powereddigitaltwin.onrender.com'}</code>.
           </p>
           <button
             onClick={fetchForecastData}
