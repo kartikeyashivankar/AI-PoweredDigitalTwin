@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.forecast import router as forecast_router
 from app.api.whatif import router as whatif_router
 from app.api.dashboard import router as dashboard_router
+from app.api.live_weather import router as live_weather_router
 
 app = FastAPI(
     title="AI-Powered Climate Digital Twin API",
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(forecast_router, prefix="/api")
 app.include_router(whatif_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(live_weather_router, prefix="/api")
 
 @app.get("/")
 def read_root():

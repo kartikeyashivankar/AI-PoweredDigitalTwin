@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Database, Cpu, HardDrive, ArrowRight, Home, ChevronRight, TrendingUp } from 'lucide-react';
+import { Database, Cpu, HardDrive, ArrowRight, Home, ChevronRight, TrendingUp, Radio, Sparkles, Activity } from 'lucide-react';
 
 export default function About() {
   return (
@@ -89,6 +89,98 @@ export default function About() {
             </ul>
           </div>
 
+        </div>
+
+        {/* Data Streams Comparison: Live Now vs AI Forecast */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:p-8 backdrop-blur-md space-y-6 shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div>
+              <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-400" />
+                <span>Data Telemetry: Live Now vs. AI Forecast</span>
+              </h2>
+              <p className="text-slate-400 text-xs mt-1">
+                Understanding the dual data engines driving real-time monitoring and neural predictive modeling across the platform.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Column 1: Live Now Data */}
+            <div className="bg-slate-950/80 border border-emerald-500/20 rounded-xl p-5 space-y-3.5 relative overflow-hidden group hover:border-emerald-500/40 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                    <Radio className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-100">"Live Now" Telemetry</h3>
+                    <span className="text-[10px] text-emerald-400 font-mono">Real-Time Observational Data</span>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Dashboard Map
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Streams real-time current weather metrics directly via the <strong>Open-Meteo API</strong> when users click anywhere on the India map or search for a location on the <strong>Dashboard</strong> page.
+              </p>
+
+              <ul className="text-xs space-y-1.5 text-slate-400 border-t border-slate-900 pt-3">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span><strong>Metrics:</strong> Live Temperature (°C), Current Rainfall (mm), & WMO Condition</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span><strong>Source:</strong> Free Open-Meteo REST API (No API key needed)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span><strong>Purpose:</strong> Instant ground-truth weather awareness for any point in India</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 2: AI Forecast Data */}
+            <div className="bg-slate-950/80 border border-blue-500/20 rounded-xl p-5 space-y-3.5 relative overflow-hidden group hover:border-blue-500/40 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-100">"AI Forecast" Engine</h3>
+                    <span className="text-[10px] text-blue-400 font-mono">Neural Model Predictions</span>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 text-[10px] font-extrabold bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded-full">
+                  Forecast & What-If
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Generates 7-day predictive trend forecasts and climate scenario simulations using a trained <strong>LSTM Recurrent Neural Network</strong> hosted on our FastAPI backend.
+              </p>
+
+              <ul className="text-xs space-y-1.5 text-slate-400 border-t border-slate-900 pt-3">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span><strong>Metrics:</strong> 7-Day Rainfall, Max Temperature, & Drought Risk Index</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span><strong>Training Ground:</strong> 11 years (2015–2025) of IMD daily national records</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span><strong>Purpose:</strong> Predictive modeling, climate trend forecasting, & what-if scenario testing</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         {/* Workflow Diagram Section */}
