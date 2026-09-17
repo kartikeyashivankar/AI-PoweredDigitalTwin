@@ -520,10 +520,10 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-3 text-xs text-slate-400">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="font-mono text-[11px] text-slate-300">CartoDB Voyager GIS Active</span>
+                  <span className="font-mono text-[11px] text-slate-300">OpenStreetMap GIS Active</span>
                 </div>
                 <div className="font-mono text-[11px] text-blue-400 bg-blue-950/50 border border-blue-900/60 px-2.5 py-1 rounded-md">
-                  GIS Layer: CartoDB Voyager
+                  GIS Layer: OpenStreetMap
                 </div>
               </div>
 
@@ -536,8 +536,8 @@ export default function Dashboard() {
                   className="w-full h-full"
                 >
                   <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
                   
                   <MapClickHandler onMapClick={handleMapClick} />
